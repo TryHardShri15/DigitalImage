@@ -1,0 +1,100 @@
+CODE:
+
+!pip install --quiet opencv-python-headless matplotlib numpy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ==============================
+# Load a valid grayscale image
+# ==============================
+!wget -q "https://images.unsplash.com/photo-1576418722861-21689bf78a35?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170" -O image.jpg
+
+# Read in grayscale mode
+img = cv2.imread("image.jpg", cv2.IMREAD_GRAYSCALE)
+
+# Verify loading
+if img is None:
+    raise ValueError("Image not loaded! Please check the URL or file path.")
+
+plt.imshow(img, cmap='gray')
+plt.title("Original Grayscale Image")
+plt.axis("off")
+plt.show()
+
+# ========================================================
+# (a) Histogram Calculation & Equalization using Inbuilt Functions
+# ========================================================
+
+# Calculate histogram
+hist = cv2.calcHist([img], [0], None, [256], [0, 256])
+
+# Equalize using built-in function
+equalized_inbuilt = cv2.equalizeHist(img)
+hist_eq = cv2.calcHist([equalized_inbuilt], [0], None, [256], [0, 256])
+
+# Display comparison
+plt.figure(figsize=(12,5))
+
+plt.subplot(2,2,1)
+plt.imshow(img, cmap='gray')
+plt.title("Original Image")
+plt.axis("off")
+
+plt.subplot(2,2,2)
+plt.imshow(equalized_inbuilt, cmap='gray')
+plt.title("Equalized Image (Inbuilt)")
+plt.axis("off")
+
+plt.subplot(2,2,3)
+plt.plot(hist, color='black')
+plt.title("Original Histogram")
+plt.xlim([0,256])
+
+plt.subplot(2,2,4)
+plt.plot(hist_eq, color='black')
+plt.title("Equalized Histogram (Inbuilt)")
+plt.xlim([0,256])
+
+plt.tight_layout()
+plt.show()
+
+# ========================================================
+# (b) Histogram Equalization WITHOUT Using Inbuilt Function
+# ========================================================
+
+def manual_hist_equalization(image):
+    # Step 1: Histogram
+    hist, bins = np.histogram(image.flatten(), 256, [0,256])
+    
+    # Step 2: PDF (normalize)
+    pdf = hist / hist.sum()
+    
+    # Step 3: CDF
+    cdf = np.cumsum(pdf)
+    
+    # Step 4: Normalize CDF to [0,255]
+    cdf_scaled = np.uint8(255 * cdf)
+    
+    # Step 5: Map original pixels using CDF
+    equalized_image = cdf_scaled[image]
+    return equalized_image, hist, cdf_scaled
+
+equalized_manual, hist_original, cdf_manual = manual_hist_equalization(img)
+
+# Display manually equalized image and histogram
+plt.figure(figsize=(12,5))
+
+plt.subplot(1,2,1)
+plt.imshow(equalized_manual, cmap='gray')
+plt.title("Equalized Image (Manual)")
+plt.axis("off")
+
+plt.subplot(1,2,2)
+plt.hist(equalized_manual.flatten(), 256, [0,256], color='black')
+plt.title("Equalized Histogram (Manual)")
+plt.xlim([0,256])
+
+plt.tight_layout()
+plt.show()
