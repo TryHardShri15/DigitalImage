@@ -1,0 +1,75 @@
+CODE:
+!pip install --quiet opencv-python-headless matplotlib scipy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import convolve2d
+import urllib.request
+
+# ===========================
+# Load sample grayscale image
+# ===========================
+url = "https://wallpaperaccess.com/full/674004.jpg"
+urllib.request.urlretrieve(url, "674004.jpg")
+img = cv2.imread("674004.jpg", cv2.IMREAD_GRAYSCALE)
+
+plt.imshow(img, cmap='gray')
+plt.title("Original Image")
+plt.axis("off")
+plt.show()
+
+# ====================================================
+# (a) Understand 1-D Convolution
+# ====================================================
+# Example: 1D signal convolution demonstration
+signal = np.array([1, 2, 3, 4, 5])
+kernel_1d = np.array([1, 0, -1])  # edge detection pattern
+conv_1d = np.convolve(signal, kernel_1d, mode='same')
+
+print("Original 1D Signal:", signal)
+print("1D Kernel:", kernel_1d)
+print("Convolved Signal:", conv_1d)
+
+# ====================================================
+# (b) 2-D Convolution Process (Low-pass & High-pass)
+# ====================================================
+
+# Define 3x3 filter masks
+low_pass_filter = np.array([[1, 1, 1],
+                            [1, 1, 1],
+                            [1, 1, 1]], dtype=np.float32) / 9  # Smoothing
+
+high_pass_filter = np.array([[-1, -1, -1],
+                             [-1,  8, -1],
+                             [-1, -1, -1]], dtype=np.float32)  # Edge enhancement
+
+# Apply convolution using SciPy
+low_pass_result = convolve2d(img, low_pass_filter, boundary='symm', mode='same')
+high_pass_result = convolve2d(img, high_pass_filter, boundary='symm', mode='same')
+
+# Normalize for display
+low_pass_result = np.clip(low_pass_result, 0, 255).astype(np.uint8)
+high_pass_result = np.clip(high_pass_result, 0, 255).astype(np.uint8)
+
+# =======================
+# Display the results
+# =======================
+plt.figure(figsize=(15,5))
+
+plt.subplot(1,3,1)
+plt.imshow(img, cmap='gray')
+plt.title("Original Image")
+plt.axis("off")
+
+plt.subplot(1,3,2)
+plt.imshow(low_pass_result, cmap='gray')
+plt.title("Low-Pass Filtered (Smoothed)")
+plt.axis("off")
+
+plt.subplot(1,3,3)
+plt.imshow(high_pass_result, cmap='gray')
+plt.title("High-Pass Filtered (Sharpened)")
+plt.axis("off")
+
+plt.show()
