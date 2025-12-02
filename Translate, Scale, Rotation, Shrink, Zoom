@@ -1,0 +1,78 @@
+CODE:
+!pip install --quiet opencv-python-headless matplotlib
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import urllib.request
+
+# ✅ Load a sample image from an open-access source
+url = "https://www.wsupercars.com/wallpapers-regular/Aston-Martin/2026-Aston-Martin-DB12-S-004-2160.jpg"
+urllib.request.urlretrieve(url, "lena.jpg")
+img = cv2.imread("lena.jpg")
+
+# Convert BGR (OpenCV default) → RGB (for display)
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+plt.imshow(img)
+plt.title("Original Image")
+plt.axis("off")
+plt.show()
+
+rows, cols, _ = img.shape
+
+# ==========================
+# (a) TRANSLATION
+# ==========================
+tx, ty = 100, 50  # Shift right by 100 and down by 50 pixels
+M_translate = np.float32([[1, 0, tx], [0, 1, ty]])
+translated_img = cv2.warpAffine(img, M_translate, (cols, rows))
+
+plt.imshow(translated_img)
+plt.title("Translated Image")
+plt.axis("off")
+plt.show()
+
+# ==========================
+# (b) SCALING
+# ==========================
+scaled_img = cv2.resize(img, None, fx=2.5, fy=2.5, interpolation=cv2.INTER_LINEAR)
+
+plt.imshow(scaled_img)
+plt.title("Scaled Image (2.5x)")
+plt.axis("off")
+plt.show()
+
+# ==========================
+# (c) ROTATION
+# ==========================
+angle = 180
+M_rotate = cv2.getRotationMatrix2D((cols / 2, rows / 2), angle, 1)
+rotated_img = cv2.warpAffine(img, M_rotate, (cols, rows))
+
+plt.imshow(rotated_img)
+plt.title("Rotated Image (180°)")
+plt.axis("off")
+plt.show()
+
+# ==========================
+# (d) SHRINKING
+# ==========================
+shrunk_img = cv2.resize(img, None, fx=0.2, fy=0.2, interpolation=cv2.INTER_AREA)
+
+plt.imshow(shrunk_img)
+plt.title("Shrunk Image (0.2x)")
+plt.axis("off")
+plt.show()
+
+# ==========================
+# (e) ZOOMING
+# ==========================
+# Crop a center portion and resize back to original dimensions
+zoom_crop = img[100:500, 100:500]
+zoomed_img = cv2.resize(zoom_crop, (cols, rows), interpolation=cv2.INTER_LINEAR)
+
+plt.imshow(zoomed_img)
+plt.title("Zoomed Image (Cropped Center)")
+plt.axis("off")
+plt.show()
