@@ -1,0 +1,80 @@
+CODE:
+# Run this once if OpenCV not yet installed
+!pip install --quiet opencv-python-headless matplotlib
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ==============================
+# Load two sample images (different names)
+# ==============================
+!wget -q "https://www.wsupercars.com/wallpapers-regular/Shelby/2026-Shelby-Super-Snake-R-005-2160.jpg" -O image1.jpg
+!wget -q "https://www.wsupercars.com/wallpapers-regular/Tuners/2025-Eccentrica-V12-Pacchetto-Titano-001-2160.jpg" -O image2.jpg
+
+# Read images
+img1 = cv2.imread("image1.jpg")
+img2 = cv2.imread("image2.jpg")
+
+# Resize to same size for arithmetic operations
+img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
+
+# Convert from BGR → RGB for display
+def show(title, image):
+    plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    plt.title(title)
+    plt.axis("off")
+    plt.show()
+
+# Show original images
+show("Image 1", img1)
+show("Image 2", img2)
+
+# ======================================
+# (a) Addition of two images
+# ======================================
+added = cv2.add(img1, img2)
+show("Added Image", added)
+
+# ======================================
+# (b) Subtract one image from the other
+# ======================================
+subtracted = cv2.subtract(img1, img2)
+show("Subtracted Image", subtracted)
+
+# ======================================
+# (c) Calculate mean value of an image
+# ======================================
+mean_val = cv2.mean(cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY))[0]
+print("Mean pixel value of Image 1:", mean_val)
+
+# ======================================
+# (d) Different Brightness by changing mean value
+# ======================================
+def change_brightness(img, scale):
+    img_float = img.astype(np.float32) * scale
+    img_float = np.clip(img_float, 0, 255)
+    return img_float.astype(np.uint8)
+
+brighter = change_brightness(img1, 1.3)   # increase brightness
+darker   = change_brightness(img1, 0.7)   # decrease brightness
+
+show("Brighter Image", brighter)
+show("Darker Image", darker)
+
+# Optional: print mean values before and after
+print("Original mean:", np.mean(img1))
+print("Brighter mean:", np.mean(brighter))
+print("Darker mean:", np.mean(darker))
+
+
+
+OUTPUT FOR C PART:
+Mean pixel value of Image 1: 152.14653079185956
+
+
+Optional part ka output: (not needed in the actual practical, optional in code)
+
+Original mean: 150.36038974086935
+Brighter mean: 179.78892533918466
+Darker mean: 104.80207288451646
