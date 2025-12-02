@@ -73,3 +73,12 @@ plt.title("High-Pass Filtered (Sharpened)")
 plt.axis("off")
 
 plt.show()
+
+
+
+OUTPUT:
+
+textual output part: 
+Original 1D SIgnal: [1 2 3 4 5]
+1D Kernel: [1 0 -1]
+Convolved Signal: [2 2 2 2 -4]
