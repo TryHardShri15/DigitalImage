@@ -1,0 +1,61 @@
+CODE:
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Step 1: Read and convert image to grayscale
+url = "https://wallpaperaccess.com/full/4231189.jpg"
+urllib.request.urlretrieve(url, "4231189.jpg")
+img = cv2.imread("4231189.jpg", cv2.IMREAD_GRAYSCALE)
+
+# Step 2: Apply FFT to convert image to frequency domain
+f = np.fft.fft2(img)
+fshift = np.fft.fftshift(f)  # shift the zero frequency to the center
+magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1)
+
+# Step 3: Create Low Pass Filter (LPF)
+rows, cols = img.shape
+crow, ccol = rows // 2, cols // 2
+mask = np.zeros((rows, cols), np.uint8)
+radius = 50  # cutoff frequency
+cv2.circle(mask, (ccol, crow), radius, 1, thickness=-1)
+
+# Apply LPF
+fshift_low = fshift * mask
+f_ishift_low = np.fft.ifftshift(fshift_low)
+img_low = np.fft.ifft2(f_ishift_low)
+img_low = np.abs(img_low)
+
+# Step 4: Create High Pass Filter (HPF)
+mask_high = np.ones((rows, cols), np.uint8)
+cv2.circle(mask_high, (ccol, crow), radius, 0, thickness=-1)
+
+# Apply HPF
+fshift_high = fshift * mask_high
+f_ishift_high = np.fft.ifftshift(fshift_high)
+img_high = np.fft.ifft2(f_ishift_high)
+img_high = np.abs(img_high)
+
+# Step 5: Display all results
+plt.figure(figsize=(12, 8))
+
+plt.subplot(231), plt.imshow(img, cmap='gray')
+plt.title('Original Image'), plt.axis('off')
+
+plt.subplot(232), plt.imshow(magnitude_spectrum, cmap='gray')
+plt.title('Magnitude Spectrum'), plt.axis('off')
+
+plt.subplot(233), plt.imshow(mask * 255, cmap='gray')
+plt.title('Low Pass Filter Mask'), plt.axis('off')
+
+plt.subplot(234), plt.imshow(img_low, cmap='gray')
+plt.title('Low Pass Filtered Image'), plt.axis('off')
+
+plt.subplot(235), plt.imshow(mask_high * 255, cmap='gray')
+plt.title('High Pass Filter Mask'), plt.axis('off')
+
+plt.subplot(236), plt.imshow(img_high, cmap='gray')
+plt.title('High Pass Filtered Image'), plt.axis('off')
+
+plt.tight_layout()
+plt.show()
