@@ -1,0 +1,109 @@
+CODE:
+!pip install --quiet opencv-python-headless matplotlib scipy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import wiener
+import urllib.request
+
+# ============================
+# Load sample image (grayscale)
+# ============================
+url = "https://wallpaperaccess.com/full/674004.jpg"
+urllib.request.urlretrieve(url, "674004.jpg")
+img = cv2.imread("674004.jpg", cv2.IMREAD_GRAYSCALE)
+
+plt.imshow(img, cmap='gray')
+plt.title("Original Image")
+plt.axis("off")
+plt.show()
+
+# ====================================
+# Function to add SALT & PEPPER noise
+# ====================================
+def add_salt_pepper_noise(image, salt_prob=0.02, pepper_prob=0.02):
+    noisy = np.copy(image)
+    total_pixels = image.size
+
+    # Salt (white) noise
+    num_salt = np.ceil(salt_prob * total_pixels)
+    coords = [np.random.randint(0, i - 1, int(num_salt)) for i in image.shape]
+    noisy[coords[0], coords[1]] = 255
+
+    # Pepper (black) noise
+    num_pepper = np.ceil(pepper_prob * total_pixels)
+    coords = [np.random.randint(0, i - 1, int(num_pepper)) for i in image.shape]
+    noisy[coords[0], coords[1]] = 0
+
+    return noisy
+
+# ====================================
+# Function to add GAUSSIAN noise
+# ====================================
+def add_gaussian_noise(image, mean=0, sigma=25):
+    gauss = np.random.normal(mean, sigma, image.shape)
+    noisy = image + gauss
+    noisy = np.clip(noisy, 0, 255)
+    return noisy.astype(np.uint8)
+
+# ====================================
+# (a) Image Restoration Setup
+# ====================================
+
+# Add noises
+sp_noisy = add_salt_pepper_noise(img)
+gauss_noisy = add_gaussian_noise(img)
+
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+plt.imshow(sp_noisy, cmap='gray')
+plt.title("Salt & Pepper Noise")
+plt.axis("off")
+
+plt.subplot(1, 2, 2)
+plt.imshow(gauss_noisy, cmap='gray')
+plt.title("Gaussian Noise")
+plt.axis("off")
+plt.show()
+
+# ====================================
+# (b) Remove SALT & PEPPER noise
+# Using Median Filter
+# ====================================
+median_filtered = cv2.medianBlur(sp_noisy, 3)
+
+plt.imshow(median_filtered, cmap='gray')
+plt.title("After Median Filter (Restored)")
+plt.axis("off")
+plt.show()
+
+# ====================================
+# (c) Minimize GAUSSIAN noise
+# Using Gaussian Filter
+# ====================================
+gaussian_filtered = cv2.GaussianBlur(gauss_noisy, (5, 5), 1.5)
+
+plt.imshow(gaussian_filtered, cmap='gray')
+plt.title("After Gaussian Filter (Smoothed)")
+plt.axis("off")
+plt.show()
+
+# ====================================
+# (d) Apply Median & Wiener Filters
+# ====================================
+median_on_gauss = cv2.medianBlur(gauss_noisy, 3)
+wiener_filtered = wiener(gauss_noisy, (5, 5))
+wiener_filtered = np.uint8(np.clip(wiener_filtered, 0, 255))
+
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+plt.imshow(median_on_gauss, cmap='gray')
+plt.title("Median Filter on Gaussian Noise")
+plt.axis("off")
+
+plt.subplot(1, 2, 2)
+plt.imshow(wiener_filtered, cmap='gray')
+plt.title("Wiener Filter on Gaussian Noise")
+plt.axis("off")
+plt.show()
