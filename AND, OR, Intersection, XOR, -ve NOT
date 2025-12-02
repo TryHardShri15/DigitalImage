@@ -1,0 +1,68 @@
+CODE:
+# Run this once if OpenCV not yet installed
+!pip install --quiet opencv-python-headless matplotlib
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ==============================
+# Load two sample images
+# ==============================
+!wget -q "https://www.wsupercars.com/wallpapers-regular/Shelby/2026-Shelby-Super-Snake-R-005-2160.jpg" -O image1.jpg
+!wget -q "https://www.wsupercars.com/wallpapers-regular/Tuners/2025-Eccentrica-V12-Pacchetto-Titano-001-2160.jpg" -O image2.jpg
+
+# Read and convert to grayscale
+img1 = cv2.imread("image1.jpg", cv2.IMREAD_GRAYSCALE)
+img2 = cv2.imread("image2.jpg", cv2.IMREAD_GRAYSCALE)
+
+# Resize to same dimensions
+img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
+
+# Helper to display images
+def show(title, image):
+    plt.imshow(image, cmap='gray')
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
+
+# Show originals
+show("Image 1", img1)
+show("Image 2", img2)
+
+# ======================================
+# (a) AND operation between two images
+# ======================================
+and_img = cv2.bitwise_and(img1, img2)
+show("AND Operation", and_img)
+
+# ======================================
+# (b) OR operation between two images
+# ======================================
+or_img = cv2.bitwise_or(img1, img2)
+show("OR Operation", or_img)
+
+# ======================================
+# (c) Intersection of two images
+#      -> same as AND operation
+# ======================================
+intersection_img = cv2.bitwise_and(img1, img2)
+show("Intersection of Images", intersection_img)
+
+# ======================================
+# (d) Watermarking using XOR operation
+# ======================================
+# Create a simple binary watermark text
+watermark = np.zeros_like(img1, dtype=np.uint8)
+cv2.putText(watermark, "WATERMARK", (50, 200),
+            cv2.FONT_HERSHEY_SIMPLEX, 2, (255,), 5, cv2.LINE_AA)
+
+# Apply XOR between image and watermark
+xor_img = cv2.bitwise_xor(img1, watermark)
+show("Watermarked (XOR) Image", xor_img)
+
+# ======================================
+# (e) NOT operation (Negative image)
+# ======================================
+not_img = cv2.bitwise_not(img1)
+show("Negative (NOT) Image", not_img)
